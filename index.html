@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ruta</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #ECE8E8; }
+</style>
+<script>
+  (function () {
+    /*
+      Routing logic — runs once on load, never reacts to live window resize.
+
+      Priority order:
+      1) Telegram Mini App / WebView → ALWAYS mobile.html, no exceptions.
+         Detected via window.Telegram?.WebApp, which Telegram injects into
+         every page opened as a Mini App / in-app browser.
+      2) Touch-primary device (phones, tablets in portrait) → mobile.html.
+         We deliberately do NOT use window.innerWidth as the primary signal,
+         because a narrow desktop browser window must still get desktop.html.
+         matchMedia('(pointer: coarse)') answers "is touch the primary input"
+         regardless of window width — a much more reliable proxy for
+         "this is a handheld device" than viewport size alone.
+      3) Tablet orientation rule:
+         - Portrait + touch  → mobile.html (vertical scroll, narrow column,
+           touch-first UX — closer to phone experience)
+         - Landscape, even if touch-capable → desktop.html (wide aspect
+           ratio matches the desktop layout much better; this also covers
+           large touch-screen monitors/kiosks, which are desktop-class
+           devices despite having a touchscreen)
+      4) Anything else (mouse/trackpad primary input) → desktop.html.
+
+      No resize listener is attached on purpose: once routed, the version
+      stays fixed for the session, even if the user manually resizes their
+      desktop browser window afterwards.
+    */
+
+    function isTelegramWebApp() {
+      try {
+        return !!(window.Telegram && window.Telegram.WebApp);
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function isTouchPrimary() {
+      try {
+        return window.matchMedia('(pointer: coarse)').matches ||
+               window.matchMedia('(hover: none)').matches;
+      } catch (e) {
+        // matchMedia unsupported — fall back to a conservative desktop assumption
+        return false;
+      }
+    }
+
+    function isLandscape() {
+      try {
+        return window.matchMedia('(orientation: landscape)').matches;
+      } catch (e) {
+        return window.innerWidth > window.innerHeight;
+      }
+    }
+
+    function chooseTarget() {
+      if (isTelegramWebApp()) return 'mobile.html';
+
+      if (isTouchPrimary()) {
+        // touch device: phones always mobile; tablets depend on orientation
+        return isLandscape() ? 'desktop.html' : 'mobile.html';
+      }
+
+      return 'desktop.html';
+    }
+
+    var target = chooseTarget();
+    window.location.replace(target);
+  })();
+</script>
+</head>
+<body>
+  <noscript>
+    <div style="font-family: -apple-system, sans-serif; padding: 2rem; text-align: center;">
+      <p>JavaScript is required for automatic redirection.</p>
+      <p>
+        <a href="desktop.html">Open desktop version</a><br>
+        <a href="mobile.html">Open mobile version</a>
+      </p>
+    </div>
+  </noscript>
+</body>
+</html>
