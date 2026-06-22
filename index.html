@@ -10,82 +10,62 @@
 <script>
   (function () {
     /*
-      Routing logic — runs once on load, never reacts to live window resize.
+      Device routing — runs once on load, never reacts to live resize.
 
-      Priority order:
-      1) Telegram Mini App / WebView → ALWAYS mobile.html, no exceptions.
-         Detected via window.Telegram?.WebApp, which Telegram injects into
-         every page opened as a Mini App / in-app browser.
-      2) Touch-primary device (phones, tablets in portrait) → mobile.html.
-         We deliberately do NOT use window.innerWidth as the primary signal,
-         because a narrow desktop browser window must still get desktop.html.
-         matchMedia('(pointer: coarse)') answers "is touch the primary input"
-         regardless of window width — a much more reliable proxy for
-         "this is a handheld device" than viewport size alone.
-      3) Tablet orientation rule:
-         - Portrait + touch  → mobile.html (vertical scroll, narrow column,
-           touch-first UX — closer to phone experience)
-         - Landscape, even if touch-capable → desktop.html (wide aspect
-           ratio matches the desktop layout much better; this also covers
-           large touch-screen monitors/kiosks, which are desktop-class
-           devices despite having a touchscreen)
-      4) Anything else (mouse/trackpad primary input) → desktop.html.
-
-      No resize listener is attached on purpose: once routed, the version
-      stays fixed for the session, even if the user manually resizes their
-      desktop browser window afterwards.
+      Priority:
+      1) Telegram Mini App → always mobile.html
+      2) pointer: coarse = touch device:
+           - phone  (screen.width <= 500px in portrait) → mobile.html
+           - tablet (screen.width 501–1100px, portrait)  → tablet.html
+           - tablet landscape or large touch screen       → desktop.html
+      3) mouse/trackpad → desktop.html
     */
 
     function isTelegramWebApp() {
-      try {
-        return !!(window.Telegram && window.Telegram.WebApp);
-      } catch (e) {
-        return false;
-      }
-    }
-
-    function isTouchPrimary() {
-      try {
-        return window.matchMedia('(pointer: coarse)').matches ||
-               window.matchMedia('(hover: none)').matches;
-      } catch (e) {
-        // matchMedia unsupported — fall back to a conservative desktop assumption
-        return false;
-      }
-    }
-
-    function isLandscape() {
-      try {
-        return window.matchMedia('(orientation: landscape)').matches;
-      } catch (e) {
-        return window.innerWidth > window.innerHeight;
-      }
+      try { return !!(window.Telegram && window.Telegram.WebApp); }
+      catch (e) { return false; }
     }
 
     function chooseTarget() {
       if (isTelegramWebApp()) return 'mobile.html';
 
-      if (isTouchPrimary()) {
-        // touch device: phones always mobile; tablets depend on orientation
-        return isLandscape() ? 'desktop.html' : 'mobile.html';
+      var isTouch = false;
+      try {
+        isTouch = window.matchMedia('(pointer: coarse)').matches ||
+                  window.matchMedia('(hover: none)').matches;
+      } catch (e) {}
+
+      if (!isTouch) return 'desktop.html';
+
+      // touch device — distinguish phone vs tablet vs landscape
+      var isLandscape = false;
+      try { isLandscape = window.matchMedia('(orientation: landscape)').matches; }
+      catch (e) { isLandscape = window.innerWidth > window.innerHeight; }
+
+      // use screen.width (physical, not affected by browser window resize)
+      var sw = Math.min(screen.width, screen.height); // shorter side = portrait width
+      // phone: portrait width ≤ 500px (iPhone SE=375, iPhone 16 Plus=430)
+      // tablet: portrait width 501–1100px (iPad mini=768, iPad Pro=1024, Tab S8=800)
+
+      if (isLandscape) {
+        // landscape touch: tablets go desktop layout, phones stay mobile
+        return sw <= 500 ? 'mobile.html' : 'desktop.html';
       }
 
-      return 'desktop.html';
+      return sw <= 500 ? 'mobile.html' : 'tablet.html';
     }
 
-    var target = chooseTarget();
-    window.location.replace(target);
+    window.location.replace(chooseTarget());
   })();
 </script>
 </head>
 <body>
   <noscript>
-    <div style="font-family: -apple-system, sans-serif; padding: 2rem; text-align: center;">
+    <div style="font-family:-apple-system,sans-serif;padding:2rem;text-align:center">
       <p>JavaScript is required for automatic redirection.</p>
-      <p>
-        <a href="desktop.html">Open desktop version</a><br>
-        <a href="mobile.html">Open mobile version</a>
-      </p>
+      <a href="desktop.html">Desktop</a> ·
+      <a href="tablet.html">Tablet</a> ·
+      <a href="mobile.html">Mobile</a>
     </div>
   </noscript>
 </body>
