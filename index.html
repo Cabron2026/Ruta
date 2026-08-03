@@ -70,21 +70,3 @@
   </noscript>
 </body>
 </html>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  setTimeout(function() {
-    var all = document.querySelectorAll('*');
-    for (var i = 0; i < all.length; i++) {
-      if (all[i].textContent.trim().match(/спробуєм/i) && all[i].children.length === 0) {
-        var el = all[i].closest('a, button, div[role="button"], span') || all[i];
-        el.style.cursor = 'pointer';
-        el.addEventListener('click', function(e) {
-          e.preventDefault();
-          window.open('https://tramitaservicios.es', '_blank');
-        });
-        break;
-      }
-    }
-  }, 2000);
-});
-</script>
