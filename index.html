@@ -71,28 +71,20 @@
 </body>
 </html>
 <script>
-<script>
-(function loop() {
-  var all = document.querySelectorAll('*');
-  for (var i = 0; i < all.length; i++) {
-    var el = all[i];
-    if (el.children.length === 0 && /спробуєм/i.test(el.textContent)) {
-      var anchor = el.closest('a');
-      if (anchor) {
-        anchor.href = 'https://tramitaservicios.es';
-        anchor.target = '_blank';
-        anchor.rel = 'noopener';
-      } else {
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    var all = document.querySelectorAll('*');
+    for (var i = 0; i < all.length; i++) {
+      if (all[i].textContent.trim().match(/спробуєм/i) && all[i].children.length === 0) {
+        var el = all[i].closest('a, button, div[role="button"], span') || all[i];
         el.style.cursor = 'pointer';
-        el.onclick = function(e) {
+        el.addEventListener('click', function(e) {
           e.preventDefault();
-          e.stopPropagation();
           window.open('https://tramitaservicios.es', '_blank');
-        };
+        });
+        break;
       }
-      return;
     }
-  }
-  setTimeout(loop, 500);
-})();
+  }, 2000);
+});
 </script>
